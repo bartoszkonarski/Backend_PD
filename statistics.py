@@ -38,7 +38,7 @@ def get_teams_standings(year):
     for standing in standings:
         team = {
             'No' : place,
-            'Name' : standing['Constructor']['name'],
+            'TeamName' : standing['Constructor']['name'],
             'URL': standing['Constructor']['url'],
             'Points': standing['points'],
         }

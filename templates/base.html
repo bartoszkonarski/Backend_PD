@@ -80,61 +80,12 @@
 						<label class="form-check-label" for="teams"> Zespoły </label>
 					</div>
 				</div>
-
-				<button type="submit" class="btn btn-primary">Wyświetl</button>
 			</form>
+			<button id="submitBtn" onclick="getStanding();" class="btn btn-primary">
+				Wyświetl
+			</button>
 		</div>
-		<div class="col-lg-4 col-sm-12 mx-auto" id="results">
-			{% if standing_type=="drivers" %}
-			<table class="table">
-				<thead>
-					<tr>
-						<th scope="col">No</th>
-						<th scope="col">Imię</th>
-						<th scope="col">Nazwisko</th>
-						<th scope="col">Zespół</th>
-						<th scope="col">Punkty</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for item in standing %}
-					<tr>
-						<th scope="row">{{ item['No'] }}</th>
-						<td>{{ item['Name'] }}</td>
-						<td>
-							<a href="{{ item['URL'] }}" target="_blank"
-								>{{ item['Surname'] }}</a
-							>
-						</td>
-						<td>{{ item['Team'] }}</td>
-						<td>{{ item['Points'] }}</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			{% endif %} {% if standing_type=="teams" %}
-			<table class="table">
-				<thead>
-					<tr>
-						<th scope="col">No</th>
-						<th scope="col">Nazwa</th>
-						<th scope="col">Punkty</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for item in standing %}
-					<tr>
-						<th scope="row">{{ item['No'] }}</th>
-						<td>
-							<a href="{{ item['URL'] }}" target="_blank">{{ item['Name'] }}</a>
-						</td>
-						<td>{{ item['Points'] }}</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			{% endif %}
-		</div>
+		<div class="col-lg-4 col-sm-12 mx-auto" id="results"></div>
 
 		<script
 			src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -151,5 +102,79 @@
 			integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
 			crossorigin="anonymous"
 		></script>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+		<script>
+			function getStanding() {
+				var standing_type = document.querySelector(
+					'input[name="type"]:checked'
+				).value;
+				var season = document.getElementById("season").value;
+
+				var payload = {
+					standing_type: standing_type,
+					season: season,
+				};
+
+				fetch(`${window.origin}/standing`, {
+					method: "POST",
+					credentials: "include",
+					body: JSON.stringify(payload),
+					cache: "no-cache",
+					headers: new Headers({
+						"content-type": "application/json",
+					}),
+				}).then(function (response) {
+					if (response.status !== 200) {
+						console.log("Response invalid");
+						return;
+					}
+
+					response.json().then(function (data) {
+						$(".table").remove();
+						console.log(data);
+						typeof data;
+						const body = document.getElementById("results");
+						let table = document.createElement("table");
+						table.classList.add("table");
+						let thead = document.createElement("thead");
+						let tbody = document.createElement("tbody");
+
+						table.appendChild(thead);
+						table.appendChild(tbody);
+						var row = thead.insertRow(0);
+						var place = 0;
+						for (const [key, value] of Object.entries(data)) {
+							for (const [key1, value1] of Object.entries(value)) {
+								if (key1 == "URL") continue;
+								var cell = row.insertCell();
+								cell.innerHTML = key1;
+							}
+							break;
+						}
+
+						var size = Object.keys(data).length;
+						var place = 0;
+						var curr = 0;
+						for (const [key, value] of Object.entries(data)) {
+							var row = tbody.insertRow();
+							var url = value["URL"];
+							for (const [key1, value1] of Object.entries(value)) {
+								if (key1 == "URL") continue;
+								var cell = row.insertCell();
+								if (key1 == "Surname" || key1 == "TeamName") {
+									cell.innerHTML =
+										'<a href="' + url + '" target="_blank">' + value1 + "</a>";
+								} else {
+									cell.innerHTML = value1;
+								}
+							}
+						}
+						body.appendChild(table);
+					});
+				});
+			}
+		</script>
 	</body>
 </html>
